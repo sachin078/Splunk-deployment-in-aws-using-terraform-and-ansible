@@ -1,8 +1,8 @@
-- name: Verify Splunk Configuration
+- name: Verify Splunk
   hosts: all
   become: yes
   tasks:
-    - name: Check if Splunk is installed
+    - name: Verifying if Splunk is installed
       ansible.builtin.command: /opt/splunk/bin/splunk
       register: splunk_status
       ignore_errors: true
