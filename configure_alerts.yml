@@ -14,4 +14,4 @@
       ansible.builtin.cron:
         name: "Splunk Unauthorized Access Alert"
         minute: "*/5"
-        job: "/opt/splunk/bin/alert_script.sh"
+        job: "/opt/splunk/bin/alertscript.sh"
