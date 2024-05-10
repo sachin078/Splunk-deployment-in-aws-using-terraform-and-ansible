@@ -1,0 +1,17 @@
+- name: Brute Force Alert 
+  hosts: 127.0.0.1
+  become: yes
+  tasks:
+    - name: Alert script
+      ansible.builtin.copy:
+        content: |
+          #!/bin/bash
+          echo "Alert: Unauthorized access detected" | /opt/splunk/bin/splunk add data-to-index -index main -sourcetype alert
+        dest: /opt/splunk/bin/alert_script.sh
+        mode: "0755"
+
+    - name: Schedule alert execution
+      ansible.builtin.cron:
+        name: "Splunk Unauthorized Access Alert"
+        minute: "*/5"
+        job: "/opt/splunk/bin/alert_script.sh"

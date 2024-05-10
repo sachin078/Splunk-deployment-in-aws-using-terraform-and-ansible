@@ -1,0 +1,12 @@
+- name: Verify Splunk Configuration
+  hosts: all
+  become: yes
+  tasks:
+    - name: Check if Splunk is installed
+      ansible.builtin.command: /opt/splunk/bin/splunk
+      register: splunk_status
+      ignore_errors: true
+
+    - name: Print Splunk status
+      ansible.builtin.debug:
+        msg: "Splunk is {{ 'installed' if splunk_status.rc == 0 else 'not installed' }}"

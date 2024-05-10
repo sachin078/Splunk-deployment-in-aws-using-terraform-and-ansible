@@ -1,0 +1,32 @@
+- name: Configure log sources in Splunk
+  hosts: 127.0.0.1
+  become: yes
+  tasks:
+    - name: Fetch syslog and auth.log from current machine
+      ansible.builtin.fetch:
+        src: /var/log/syslog
+        dest: /tmp/syslog
+
+    - name: Fetch auth.log from current machine
+      ansible.builtin.fetch:
+        src: /var/log/auth.log
+        dest: /tmp/auth.log
+
+    - name: Copy inputs.conf file
+      ansible.builtin.copy:
+        content: |
+          [monitor:///tmp/syslog]
+          disabled = false
+          index = main
+          sourcetype = syslog
+
+          [monitor:///tmp/auth.log]
+          disabled = false
+          index = main
+          sourcetype = auth
+        dest: /opt/splunk/etc/system/local/inputs.conf
+
+    - name: Restart Splunk service
+      ansible.builtin.service:
+        name: splunk
+        state: restarted
