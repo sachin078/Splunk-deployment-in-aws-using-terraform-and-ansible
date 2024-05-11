@@ -11,7 +11,7 @@ Before diving into the deployment process, ensure you have the following prerequ
 - Basic understanding of AWS services and Terraform concepts.
 - Access to the Splunk Enterprise installation package. 🔑
 
-## Step 1: Provisioning AWS Resources with Terraform:
+## Step 1: Provisioning AWS Resources and install Splunk with Terraform:
 We'll start by defining the infrastructure requirements using Terraform. Below is an example Terraform configuration file (`main.tf`) that provisions an AWS EC2 instance, installs Splunk Enterprise, copies the Ansible playbook to the Splunk server, and executes them. 
 
 ```hcl
