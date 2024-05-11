@@ -15,7 +15,7 @@ Before diving into the deployment process, ensure you have the following prerequ
 We'll start by defining the infrastructure requirements using Terraform. Below is an example Terraform configuration file (`main.tf`) that provisions an AWS EC2 instance, installs Splunk Enterprise, copies the Ansible playbook to the Splunk server, and executes them. 
 
 ```hcl
-Use main.tf
+[Use main.tf](https://github.com/sachin078/Splunk-deployment-in-aws-using-terraform-and-ansible/blob/sachin078/Sachin/main.tf)
 ```
 
 
