@@ -1,4 +1,4 @@
-```markdown
+
 # Simplifying Splunk Deployment on AWS with Terraform and Ansible 🚀
 
 ## Introduction:
