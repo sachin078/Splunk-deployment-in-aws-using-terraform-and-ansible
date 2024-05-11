@@ -16,7 +16,7 @@ We'll start by defining the infrastructure requirements using Terraform. Below i
 
 ```hcl
 resource "aws_instance" "testsplunk" {
-  ami                    = "ami-0e001c9271cf7f3b9"
+  ami                    = "your AMI ID"
   instance_type          = "t2.medium"
   key_name               = "your key Id"
   security_groups        = ["ID of Security group"]
@@ -25,7 +25,7 @@ resource "aws_instance" "testsplunk" {
   ebs_block_device {
     device_name           = "/dev/sda1"
     volume_size           = 60
-    volume_type           = "gp2"
+    volume_type           = "your volume type"
     delete_on_termination = true
   }
 
@@ -37,8 +37,8 @@ resource "aws_instance" "testsplunk" {
     inline = [
       "sudo apt-get update -y",
       "sudo apt-get install -y wget",
-      "wget -O splunk-your version -78803f08xxxxx-linux-2.6-amd64.deb 'https://download.splunk.com/products/splunk/releases/9.0.1/linux/splunk-9.0.1-78803f08aabb-linux-2.6-amd64.deb'",
-      "sudo dpkg -i splunk-9.0.1-78803f08aabb-linux-2.6-amd64.deb",
+      "wget -O splunk-your version -78803f08xxxxx-linux-2.6-amd64.deb 'https://download.splunk.com/products/splunk/releases/9.0.1/linux/splunk-9.x.x-7880xxxxxxx-linux-2.6-amd64.deb'",
+      "sudo dpkg -i splunk-9.x.x-78803f08aabb-linux-2.6-amd64.deb",
       "sudo /opt/splunk/bin/splunk start --accept-license --answer-yes --no-prompt --seed-passwd yourpassword",
       "sudo /opt/splunk/bin/splunk status",
       "sudo /opt/splunk/bin/splunk enable boot-start -user splunk",
