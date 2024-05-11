@@ -15,7 +15,115 @@ Before diving into the deployment process, ensure you have the following prerequ
 We'll start by defining the infrastructure requirements using Terraform. Below is an example Terraform configuration file (`main.tf`) that provisions an AWS EC2 instance, installs Splunk Enterprise, copies the Ansible playbook to the Splunk server, and executes them. 
 
 ```hcl
-[Use main.tf](https://github.com/sachin078/Splunk-deployment-in-aws-using-terraform-and-ansible/blob/sachin078/Sachin/main.tf)
+resource "aws_instance" "testsplunk" {
+  ami                    = "ami-0e001c9271cf7f3b9"
+  instance_type          = "t2.medium"
+  key_name               = "your key Id"
+  security_groups        = ["ID of Security group"]
+  subnet_id              = "ID of subnet"
+
+  ebs_block_device {
+    device_name           = "/dev/sda1"
+    volume_size           = 60
+    volume_type           = "gp2"
+    delete_on_termination = true
+  }
+
+  tags = {
+    Name = "splunk-instance"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo apt-get update -y",
+      "sudo apt-get install -y wget",
+      "wget -O splunk-your version -78803f08xxxxx-linux-2.6-amd64.deb 'https://download.splunk.com/products/splunk/releases/9.0.1/linux/splunk-9.0.1-78803f08aabb-linux-2.6-amd64.deb'",
+      "sudo dpkg -i splunk-9.0.1-78803f08aabb-linux-2.6-amd64.deb",
+      "sudo /opt/splunk/bin/splunk start --accept-license --answer-yes --no-prompt --seed-passwd yourpassword",
+      "sudo /opt/splunk/bin/splunk status",
+      "sudo /opt/splunk/bin/splunk enable boot-start -user splunk",
+      "sudo /opt/splunk/bin/splunk restart",
+      "sudo /opt/splunk/bin/splunk status"
+    ]
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("path to your private key")
+      host        = self.public_ip
+    }
+  }
+
+  provisioner "file" {
+    source      = "path to your splunk verification/install_splunk.yml"
+    destination = "/tmp/install_splunk.yml"
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("path to your private key")
+      host        = self.public_ip
+    }
+  }
+
+  provisioner "file" {
+    source      = "path to your inputs/inputs.conf"
+    destination = "/tmp/inputs.conf"
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("path to your private key")
+      host        = self.public_ip
+    }
+  }
+
+  provisioner "file" {
+    source      = "path to your log source config/configure_log_sources.yml"
+    destination = "/tmp/configure_log_sources.yml"
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("path to your private key")
+      host        = self.public_ip
+    }
+  }
+
+  provisioner "file" {
+    source      = "path to your alert config file/configure_alerts.yml"
+    destination = "/tmp/configure_alerts.yml"
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("/path to your private key")
+      host        = self.public_ip
+    }
+  }
+
+  provisioner "file" {
+    source      = "path to your log file /access.log"
+    destination = "/tmp/access.log"
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("path to your private key")
+      host        = self.public_ip
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo apt-get update -y",
+      "sudo apt-get install -y ansible",
+      "ansible-playbook /tmp/install_splunk.yml",
+      "ansible-playbook /tmp/configure_log_sources.yml",
+      "ansible-playbook /tmp/configure_alerts.yml"
+    ]
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("path to your private key")
+      host        = self.public_ip
+    }
+  }
+}
 ```
 
 
@@ -27,28 +135,87 @@ It is crucial to verify that there is ample storage allocated for Splunk to oper
 Once the EC2 instance is provisioned, we'll use Ansible to automate the log source configuration of Splunk. The following Ansible playbook demonstrates how to install Splunk, configure log sources, and set up alerts.
 
 ```yaml
-Use configure_log_source.yml
+- name: log sources in Splunk
+ hosts: 127.0.0.1
+ become: yes
+ tasks:
+ - name: Fetch syslog and auth.log from current machine
+ ansible.builtin.fetch:
+ src: /var/log/syslog
+ dest: /tmp/syslog
+- name: Fetch auth.log from current machine
+ ansible.builtin.fetch:
+ src: /var/log/auth.log
+ dest: /tmp/auth.log
+- name: Copy inputs.conf file
+ ansible.builtin.copy:
+ content: |
+ [monitor:///tmp/syslog]
+ disabled = false
+ index = main
+ sourcetype = syslog
+[monitor:///tmp/auth.log]
+ disabled = false
+ index = main
+ sourcetype = auth
+ dest: /opt/splunk/etc/system/local/inputs.conf
+- name: Restart Splunk service
+ ansible.builtin.service:
+ name: splunk
+ state: restarted
 ```
 
 ## Step 3: Verifying Splunk Configuration:
 After the deployment, it's crucial to verify that Splunk is properly installed and configured. You can use the following Ansible playbook to check Splunk status.
 
 ```yaml
-Use verify_splunk.yml
+- name: Verify Splunk
+ hosts: all
+ become: yes
+ tasks:
+ - name: Verifying if Splunk is installed
+ ansible.builtin.command: /opt/splunk/bin/splunk
+ register: splunk_status
+ ignore_errors: true
+- name: Print Splunk status
+ ansible.builtin.debug:
+ msg: "Splunk is {{ 'installed' if splunk_status.rc == 0 else 'not installed' }}"
 ```
 
 ## Step 4: Log Ingestion Configuration:
 Splunk relies on data ingestion from various sources. We'll configure Splunk to monitor system logs by fetching syslog and auth.log from the EC2 instance.
 
 ```conf
-inputs.conf
+[monitor:///tmp/syslog]
+disabled = false
+index = main
+sourcetype = syslog
+[monitor:///tmp/auth.log]
+disabled = false
+index = main
+sourcetype = auth
 ```
 
 ## Step 5: Setting Up Alerts:
 Alerting plays a vital role in detecting and responding to potential security threats. We'll create a simple alert script and schedule it to run periodically.
 
 ```yaml
-Use configure_alert.yml
+- name: Brute Force Alert 
+ hosts: 127.0.0.1
+ become: yes
+ tasks:
+ - name: Alert script
+ ansible.builtin.copy:
+ content: |
+ #!/bin/bash
+ echo "Alert: Unauthorized access detected" | /opt/splunk/bin/splunk add data-to-index -index main -sourcetype alert
+ dest: /opt/splunk/bin/alert_script.sh
+ mode: "0755"
+ -name: Schedule alert execution
+ ansible.builtin.cron:
+ name: "Splunk Unauthorized Access Alert"
+ minute: "*/5"
+ job: "/opt/splunk/bin/alertscript.sh"
 ```
 
 ## Conclusion:
