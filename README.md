@@ -221,4 +221,4 @@ Alerting plays a vital role in detecting and responding to potential security th
 ## Conclusion:
 By leveraging Terraform and Ansible, deploying Splunk Enterprise on AWS becomes a seamless and repeatable process. This automated approach not only saves time but also ensures consistency and reliability in your Splunk deployment. With Splunk up and running, organizations can harness the power of their machine-generated data to drive informed decision-making and enhance security posture. 🌟
 
-## Article: 
+## Article: https://medium.com/@sachin05prabakar/simplifying-splunk-deployment-on-aws-with-terraform-and-ansible-2a47ddb69f32
